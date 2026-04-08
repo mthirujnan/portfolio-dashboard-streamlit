@@ -284,43 +284,66 @@ def _calc_jewellery(jewellery_data, gold_prices):
 def _calc_summary(gold, stocks, endowus, hsbc, sc, prop, jewellery):
     """
     Rolls all asset classes up into overall portfolio totals.
-    Calculates allocation percentage for each asset class.
 
-    For property: we use equity (current value minus loan) as the
-    "investable value" rather than the full market price, because
-    the loan portion is not your wealth yet.
+    Total Net Worth   = current value of every asset class combined
+                        (property counted as equity: market value minus loan)
+    Total Invested    = all capital put into investments
+                        (gold + stocks + endowus + hsbc + jewellery if known)
+                        SC savings and property are excluded here because
+                        they are tracked separately with their own metrics.
+    Total Gain / Loss = current investment value minus total invested
+    Return %          = gain / invested × 100
     """
-    # Map each asset class to its contribution to total investable wealth
+    # Current value of each asset class
     asset_values = {
-        'Gold':      gold['total_value'],
-        'Stocks':    stocks['total_value'],
-        'Endowus':   endowus['total_value'],
-        'HSBC RSP':  hsbc['total_value'],
+        'Gold':       gold['total_value'],
+        'Stocks':     stocks['total_value'],
+        'Endowus':    endowus['total_value'],
+        'HSBC RSP':   hsbc['total_value'],
         'SC Savings': sc['total_value'],
-        'Property':  prop['equity'],        # equity only, not full market value
-        'Jewellery': jewellery['current_value'],
+        'Property':   prop['equity'],          # equity = market value minus loan
+        'Jewellery':  jewellery['current_value'],
     }
 
-    total_value = sum(asset_values.values())
+    total_net_worth = sum(asset_values.values())
 
-    # Invested amounts (where applicable)
+    # Total invested = capital deployed into investments
+    # Jewellery only included if a purchase cost was recorded
+    jewellery_cost = jewellery['total_cost'] if jewellery['total_cost'] else 0.0
+
     total_invested = (
         gold['total_invested']
         + stocks['total_invested']
         + endowus['total_invested']
         + hsbc['total_invested']
-        # SC and Property don't have a simple "invested" figure in the same way
+        + jewellery_cost
     )
 
-    # Allocation % for each asset class
+    # Current value of those same investments (excluding SC and property)
+    total_investment_value = (
+        gold['total_value']
+        + stocks['total_value']
+        + endowus['total_value']
+        + hsbc['total_value']
+        + jewellery['current_value']
+    )
+
+    total_pnl     = total_investment_value - total_invested
+    total_pnl_pct = (total_pnl / total_invested * 100) if total_invested > 0 else 0.0
+
+    # Allocation % for the pie chart — based on total net worth
     allocation = {
-        name: (value / total_value * 100) if total_value > 0 else 0.0
+        name: (value / total_net_worth * 100) if total_net_worth > 0 else 0.0
         for name, value in asset_values.items()
     }
 
     return {
-        'asset_values':  asset_values,
-        'total_value':   total_value,
-        'total_invested': total_invested,
+        'asset_values':          asset_values,
+        'total_net_worth':       total_net_worth,
+        'total_value':           total_net_worth,   # kept for backward compatibility
+        'total_invested':        total_invested,
+        'total_investment_value': total_investment_value,
+        'total_pnl':             total_pnl,
+        'total_pnl_pct':         total_pnl_pct,
         'allocation':    allocation,
     }

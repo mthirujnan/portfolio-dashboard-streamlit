@@ -118,27 +118,34 @@ st.subheader("Portfolio Summary")
 
 col1, col2, col3, col4 = st.columns(4)
 
-total_value    = summary['total_value']
-total_invested = summary['total_invested']
-total_pnl      = total_value - total_invested  # approximate, excludes SC and full property
-
 with col1:
-    st.metric(label="Total Portfolio Value", value=fmt_sgd(total_value))
+    st.metric(
+        label="Total Net Worth",
+        value=fmt_sgd(summary['total_net_worth']),
+        help="Sum of all assets: investments + SC savings + property equity"
+    )
 
 with col2:
-    st.metric(label="Total Invested (tracked)", value=fmt_sgd(total_invested))
+    st.metric(
+        label="Total Invested",
+        value=fmt_sgd(summary['total_invested']),
+        help="Gold + Stocks + Endowus + HSBC RSP + Jewellery (SC savings and property tracked separately)"
+    )
 
 with col3:
-    pnl_pct = (total_pnl / total_invested * 100) if total_invested > 0 else 0
     st.metric(
-        label="Unrealised P&L",
-        value=fmt_sgd(total_pnl),
-        delta=fmt_pct(pnl_pct),
+        label="Total Gain / Loss",
+        value=fmt_sgd(summary['total_pnl']),
+        delta=fmt_pct(summary['total_pnl_pct']),
+        help="Gain/loss on your investments vs what you paid"
     )
 
 with col4:
-    prop = portfolio['property']
-    st.metric(label="Property Equity", value=fmt_sgd(prop['equity']))
+    st.metric(
+        label="Return",
+        value=fmt_pct(summary['total_pnl_pct']),
+        help="Total return on invested capital"
+    )
 
 st.divider()
 
