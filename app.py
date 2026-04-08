@@ -99,7 +99,9 @@ with col_btn:
 try:
     portfolio = load_dashboard_data()
 except Exception as error:
+    import traceback
     st.error(f"Could not load portfolio data: {error}")
+    st.code(traceback.format_exc())
     st.stop()
 
 summary    = portfolio['summary']
