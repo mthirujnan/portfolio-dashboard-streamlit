@@ -233,15 +233,20 @@ def _calc_property(property_data):
     outstanding_loan = property_data.get('outstanding_loan', 0.0)
     current_value    = property_data.get('current_value',    0.0)
 
-    equity           = current_value - outstanding_loan
-    unrealised_gain  = current_value - purchase_price
-    gain_pct         = (unrealised_gain / purchase_price * 100) if purchase_price > 0 else 0.0
+    # net_equity   = what you own today (market value minus remaining loan)
+    # equity_basis = what you owned at purchase price (purchase price minus loan)
+    #                Used as "invested" so that P&L reflects pure market appreciation
+    net_equity   = current_value - outstanding_loan
+    equity_basis = purchase_price - outstanding_loan
+    unrealised_gain = current_value - purchase_price
+    gain_pct     = (unrealised_gain / purchase_price * 100) if purchase_price > 0 else 0.0
 
     return {
         'purchase_price':   purchase_price,
         'outstanding_loan': outstanding_loan,
         'current_value':    current_value,
-        'equity':           equity,
+        'equity':           net_equity,
+        'equity_basis':     equity_basis,
         'unrealised_gain':  unrealised_gain,
         'gain_pct':         gain_pct,
     }
@@ -307,8 +312,12 @@ def _calc_summary(gold, stocks, endowus, hsbc, sc, prop, jewellery):
 
     total_net_worth = sum(asset_values.values())
 
-    # Total invested = capital deployed into investments
-    # Jewellery only included if a purchase cost was recorded
+    # ── Total Invested — matches the Excel dashboard formula exactly ──
+    #
+    # SC savings:  sc_total counted as both "invested" and "value" (cash = cost basis)
+    # Property:    equity_basis (purchase_price − loan) used as "invested" so that
+    #              P&L reflects pure market appreciation on the full property
+    # Jewellery:   only included if a purchase cost_per_gram was entered
     jewellery_cost = jewellery['total_cost'] if jewellery['total_cost'] else 0.0
 
     total_invested = (
@@ -316,20 +325,16 @@ def _calc_summary(gold, stocks, endowus, hsbc, sc, prop, jewellery):
         + stocks['total_invested']
         + endowus['total_invested']
         + hsbc['total_invested']
+        + sc['total_value']          # cash savings: cost basis = balance
+        + prop['equity_basis']       # purchase_price − outstanding_loan
         + jewellery_cost
     )
 
-    # Current value of those same investments (excluding SC and property)
-    total_investment_value = (
-        gold['total_value']
-        + stocks['total_value']
-        + endowus['total_value']
-        + hsbc['total_value']
-        + jewellery['current_value']
-    )
-
-    total_pnl     = total_investment_value - total_invested
+    total_pnl     = total_net_worth - total_invested
     total_pnl_pct = (total_pnl / total_invested * 100) if total_invested > 0 else 0.0
+
+    # kept for backward compatibility with app.py references
+    total_investment_value = total_net_worth
 
     # Allocation % for the pie chart — based on total net worth
     allocation = {
