@@ -1,0 +1,22 @@
+# IMPORTANT: This file tells Git which files to NEVER upload to GitHub.
+# The secrets.toml file contains your Google credentials — it must stay private.
+
+# Streamlit secrets — contains your Google API credentials. NEVER commit this.
+.streamlit/secrets.toml
+
+# Python cache files — automatically generated, not needed in Git
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# macOS system file — created automatically by Mac, not needed
+.DS_Store
+
+# Virtual environment folders — large, can be recreated from requirements.txt
+venv/
+.venv/
+env/
+
+# Local data file — no longer used (data is in Google Sheets) but keep out of Git
+data/holdings.json

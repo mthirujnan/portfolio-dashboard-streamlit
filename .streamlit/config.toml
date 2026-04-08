@@ -1,0 +1,21 @@
+# Streamlit configuration file.
+# Controls the appearance and behaviour of the app.
+
+[theme]
+# A clean, professional dark theme with gold accents
+primaryColor        = "#F4A800"   # gold/amber — matches the portfolio theme
+backgroundColor     = "#0E1117"   # dark background
+secondaryBackgroundColor = "#1A1F2E"  # slightly lighter panels
+textColor           = "#FAFAFA"   # near-white text
+
+[server]
+# Allow connections from other devices on your network (e.g. your phone)
+# Without this, only the Mac itself can access the app.
+headless = true
+address  = "0.0.0.0"
+port     = 8501
+
+[browser]
+# Prevent Streamlit from opening a browser tab automatically on startup
+# (handy when running in the background)
+gatherUsageStats = false
